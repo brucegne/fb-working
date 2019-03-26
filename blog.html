@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">  
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">  
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.11/summernote-lite.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.11/summernote-lite.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.8.2/firebase-functions.js"></script>
+  <script type="text/javascript" src="https://cdn.emailjs.com/sdk/2.3.2/email.min.js"></script>
+</head>
+<style>
+    body {
+      padding-top: 120px;
+      }
+    img {
+      width: 100px;
+      }
+</style>  
+<body>
+<nav class="navbar fixed-top navbar-dark bg-dark">
+  <a class="navbar-brand" href="#">Merle Myer's Blog</a>
+  <form class="form-inline" id="loginForm" method="post">
+    <button id="btnAddNew" type="button"  style="display: none; margin-right: 20px;">New Post</button>
+    <input type="text" name="email" id="email" placeholder="EMail Address" style="margin-right: 10px;" />
+    <input type="password" id="passw" name="password" placeholder="Password" style="margin-right: 10px;" />
+    <button id="btnLogin" style="margin-right: 10px;" >
+      Sign In
+    </button>
+    <button id="btnSignUp" >
+      Sign Up
+    </button>
+    <button id="btnLogOut" style="display: none;" >
+     Log Out
+    </button>
+  </form>
+</nav>
+<div class="modal fade " id="editModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalCenterTitle">Edit Blog Post</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+    <div class="container-fluid" id="showEdit">
+    <form id="summerform" >
+    <input type="hidden" id="kv" name="kv" value="" />
+      <div class="form-group">
+        <label for="title-data">Title</label>
+        <input type="text" id="post_title" name="post-title" />
+      </div>
+     <div class="form-group">
+      <label for="editordata">Body</label>
+        <textarea id="summernote" name="editordata" rows="20"></textarea>
+    </div>
+    <button type="submit" id="btn" class="btn btn-primary">Save</button>
+    <button id="btnDelete" class="btn btn-danger">
+        Delete
+      </button>
+    </form>
+  </div>
+    </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>
+<script id="temp101" type="text/template">
+    <div class="card" style="width: 800px;" class="w3-card-4 shadow p-3 mb-5 bg-white rounded">
+      <div class="card-body">
+        <h5 class="card-title">{{post_title}}</h5>
+        <h6 class="card-subtitle mb-2 text-muted"><i>Created On - {{createDate}}</i></h6>
+        <p class="card-text">{{post_body}}</p>
+      </div>
+    </div>
+</script>
+  <a name="topofposts" />
+  <p class="container" id="hdrresults">
+  </p>
+  <div class="container" id="tresults">
+  </div>
+  <div class="container">
+  <div class="row justify-content-md-center">
+    <div class="col col-3">
+
+    </div>
+    <div class="col-6">
+      <table id="tResults">
+    <tr>
+      <th></th>
+    </tr>
+  </table>
+   </div>
+    <div class="col col-3">
+
+    </div>
+  </div>
+</body>
+<script type="text/javascript">
+   (function(){
+      emailjs.init("user_pcBNICSJtsYmQTcovup2o");
+   })();
+
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyA3rUqyZE10Zz5u8DNKgqhugjLWehwJsRc",
+    authDomain: "bgblog.firebaseapp.com",
+    databaseURL: "https://bgblog.firebaseio.com",
+    projectId: "firebase-bgblog",
+    storageBucket: "firebase-bgblog.appspot.com",
+    messagingSenderId: "50604851248"
+  };
+
+firebase.initializeApp(config);
+    
+const auth = firebase.auth();
+
+const ref = firebase.database().ref();
+
+const refB = ref.child('/bgblog');
+
+function shwLoginState() {
+   $('#email').hide();
+   $('#passw').hide();
+   $('#tresults').hide();
+   $('#hdrresults').hide();
+   $('#btnLogin').hide();
+   $('#btnSignUp').hide();
+   $('#btnLogOut').show();
+   $('#showEdit').show();
+   $('#btnAddNew').show();
+   loadlist();
+}
+
+  function shwLogoutState() {
+   $('#btnLogOut').hide();
+   $('#showEdit').hide();
+   $('#btnAddNew').hide();
+   $('#tresults').show();
+   $('#hdrresults').show();
+   $('#email').show();
+   $('#passw').show();
+   $('#btnLogin').show();
+   $('#btnSignUp').show();
+   tempList();
+}
+
+firebase.auth().onAuthStateChanged(user=>{
+  if(user){
+    console.log(user.email);
+    setTimeout(shwLoginState, 3000);
+  } else{
+    setTimeout(shwLogoutState, 2000);
+  }
+})
+
+$('#summerform').submit(function() {
+      event.preventDefault();
+      recOut = new Object();
+      recKey=$('#kv').val();
+      recOut['post_title'] = $('#post_title').val()
+      recOut['post_body'] = $('#summernote').summernote('code');
+      $('#editModal').modal('hide');
+      if(($('#kv').val().length ) > 0) {
+        ref.child(recKey).update(recOut);
+        sendEmail('',$('#summernote').summernote('code'));
+        $('#btn').html("Add");
+        $('#kv').val('');
+      } else {
+        recOut['createdTime'] = new Date().getTime();
+        ref.push(recOut);
+        $('#kv').val(' ');
+        $('#post_title').val(' ');
+        $('#summernote').summernote('code', ' ');
+      }
+        $('#kv').val('');
+        $('#post_title').val(' ');
+        $('#summernote').summernote('code', ' ');
+        $('#btn').html("Add");
+        $('#kv').val('');
+});
+
+  function shwAddNew() {
+        $('#kv').val('');
+        $('#post_title').val(' ');
+        $('#summernote').summernote('code', ' ');
+        $('#btn').html("Add");
+        $('#kv').val('');
+        $('#editModal').modal('show');
+  }
+
+  function lineEdit(rec) {
+    ref.child(rec).on("value", function(snapshot) {
+      $('#kv').val(snapshot.key);
+      $("#post_title").val(snapshot.val().post_title)
+      $('#summernote').summernote('code', snapshot.val().post_body);
+      $('#btn').html("Save");
+      $('#editModal').modal('show');
+    });
+  }
+
+  document.getElementById("btnDelete").addEventListener('click', e=>{
+    e.preventDefault();
+    recKey=$('#kv').val();
+    ref.child(recKey).remove();
+    $('#kv').val('');
+    $('#post_title').val(' ');
+    $('#summernote').summernote('code', ' ');
+    $('#editModal').modal('hide');
+  });
+
+  document.getElementById("btnLogin").addEventListener('click', e=>{
+  e.preventDefault();
+//  sendEmail();
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("passw").value;
+  firebase.auth().signInWithEmailAndPassword(email, pass).catch(function(error) {
+    var errorCode = error.code;
+    var errorMessage = error.message;
+//    sendEmail(email);
+    alert(errorMessage);
+  });
+});
+  
+function sendEmail(email,btext) {
+    tmail = document.getElementById("email").value;
+  
+    var templateParams = {
+        name: 'James',
+        subject: tmail + ' Just logged in',
+        to: 'Bruce Gordon',
+        html: btext || 'This is the first message from the blogger page !',
+        send_to: email || 'brucegne@gmail.com'
+    };
+  
+    emailjs.send('gmail', 'email_template', templateParams, 'user_pcBNICSJtsYmQTcovup2o')
+        .then(function(response) {
+           console.log('SUCCESS!', response.status, response.text);
+        }, function(error) {
+           console.log('FAILED...', error);
+        });    
+
+}    
+
+  document.getElementById("btnSignUp").addEventListener('click', e=>{
+  e.preventDefault();
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("passw").value;
+  firebase.auth().createUserWithEmailAndPassword(email, pass).catch(function(error) {
+    var errorCode = error.code;
+    var errorMessage = error.message;
+    alert(errorMessage);
+    // ...
+  });
+  var user = firebase.auth().currentUser;
+
+  user.sendEmailVerification().then(function() {
+    // Email sent.
+  }).catch(function(error) {
+    // An error happened.
+  });
+
+});
+
+document.getElementById("btnAddNew").addEventListener('click', e=>{
+  e.preventDefault();
+  shwAddNew();
+})
+
+document.getElementById("btnLogOut").addEventListener('click', e=>{
+  e.preventDefault();
+  firebase.auth().signOut();
+  console.log('Logging Out');
+  shwLogoutState();
+})
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    event.preventDefault();
+    $('#showEdit').hide();
+    tempList();
+    $('#summernote').summernote({
+      tabsize: 2,
+      height: 200
+    });
+    setTimeout(tempList, 1000);
+
+  });
+
+  function lineDelete(rec) {
+    ref.child(rec).remove();
+    $('#editModal').modal('hide');
+
+  }
+
+  function prtDate(targ) {
+    return new Date(targ).toString().split(' ').slice(1,4).join('-');
+  }
+
+  function tempList() {
+      var templateHTML = document.getElementById('temp101').innerHTML;
+      var templateHeader = document.getElementById('hdrresults');
+      var templateOutput = document.getElementById('tresults');
+      var hOut='';
+      var hArr = [];
+      var hdrArr = [];
+      ref.on("value", function(snapshot) {
+        $("#tResults").find("tr:not(:first)").remove();
+        var rtable = document.getElementById("tResults");
+        snapshot.forEach(function(childSnapshot) {
+          var key = childSnapshot.key;
+          var childData = childSnapshot.val();
+          title=childData['post_title'];
+          createdTime=prtDate(childData['createdTime']);
+          body=childData['post_body'];
+          hOut += templateHTML
+            .replace(/{{post_title}}/g,title)
+            .replace(/{{createDate}}/g,createdTime)
+            .replace(/{{post_body}}/g,body);
+          if (childData['post_sticky']) {
+            hdrArr.unshift(templateHTML
+              .replace(/{{post_title}}/g,title)
+              .replace(/{{createDate}}/g,createdTime)
+              .replace(/{{post_body}}/g,body)
+            );
+          }else{
+            hArr.unshift(templateHTML
+              .replace(/{{post_title}}/g,title)
+              .replace(/{{createDate}}/g,createdTime)
+              .replace(/{{post_body}}/g,body)
+            );
+          }
+        })
+      })
+//      templateOutput.innerHTML=hOut;
+      templateHeader.innerHTML= hdrArr.join('<br /><br >');
+      templateOutput.innerHTML= hArr.join('<br /><br >');
+  }
+
+  function loadlist() {
+      ref.on("value", function(snapshot) {
+        $("#tResults").find("tr:not(:first)").remove();
+          var rtable = document.getElementById("tResults");
+          var trow = rtable.insertRow(-1);
+          var cell1 = trow.insertCell(-1);
+          cell1.innerHTML = '<h3>Click on post to edit</h3>';
+        snapshot.forEach(function(childSnapshot) {
+          var key = childSnapshot.key;
+          var childData = childSnapshot.val();
+          var eDate = childData['createdTime'];
+          var trow = rtable.insertRow(-1);
+          var cell1 = trow.insertCell(-1);
+          cell1.innerHTML = '';
+          cell1.innerHTML = '<strong onclick='+'lineEdit("'+key+'")>'+childData['post_title']+'<i> created on '+prtDate(childData['createdTime'])+'</i></strong>';
+          var trow = rtable.insertRow(-1);
+          var cell1 = trow.insertCell(-1);
+          cell1.innerHTML = '';          
+        });
+      });
+  };
+
+</script>
+</html>
+
+                                    

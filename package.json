@@ -1,0 +1,13 @@
+{
+  "name": "js-ego8ku",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@firebase/util": "^0.2.9",
+    "bootstrap": "^4.3.1",
+    "email-js": "^2.0.1",
+    "firebase": "^5.8.6",
+    "jquery": "^3.3.1",
+    "popper.js": "^1.14.7"
+  }
+}
