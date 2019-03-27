@@ -9,7 +9,7 @@ var appDiv = document.getElementById('app');
 var appkDiv = document.getElementById('appk');
 
 const ref = firebase.database().ref();
-//ref.child('/starter').push({ "startup": 'Hello There World' });
+// ref.child('/starter').push({ "startup": 'Hello There World' });
 
 ref.child('/starter').on('value', function (snap) {
   snap.forEach(function (childSnapshot) {
