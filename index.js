@@ -14,7 +14,7 @@ const ref = firebase.database().ref();
 ref.child('/starter').on('value', function (snap) {
   snap.forEach(function (childSnapshot) {
     var childData = childSnapshot.val();
-    appkDiv.innerHTML = childSnapshot.key;
+    appkDiv.innerHTML = appkDiv.innerHTML + '<br />' + childSnapshot.key;
     appDiv.innerHTML = appDiv.innerHTML + '<br />' + childData.startup;
   })
 })
